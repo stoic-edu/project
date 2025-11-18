@@ -5,10 +5,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Calendar } from '../ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Users, DollarSign, ShoppingCart, TrendingUp, Download, CalendarIcon, RefreshCw } from 'lucide-react';
-import { format, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
+import { format, subDays, startOfMonth, endOfMonth, startOfWeek } from 'date-fns';
 import { projectId } from '../../utils/supabase/info';
 import { toast } from 'sonner';
-
 
 interface ReportsTabProps {
   accessToken: string;
@@ -18,10 +17,11 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState('all');
-  const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
-  const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
+  const [customEndDate, setCustomEndDate] = useState<Date | undefined>();
   const [showStartCalendar, setShowStartCalendar] = useState(false);
   const [showEndCalendar, setShowEndCalendar] = useState(false);
+  const lastDay = endOfMonth(new Date());
 
   useEffect(() => {
     fetchAnalytics();
@@ -31,14 +31,13 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
     setLoading(true);
     try {
       let url = `https://${projectId}.supabase.co/functions/v1/make-server-493cc528/admin/analytics`;
-      
-      // Add date range parameters
+
       if (dateRange === 'custom' && customStartDate && customEndDate) {
         url += `?startDate=${format(customStartDate, 'yyyy-MM-dd')}&endDate=${format(customEndDate, 'yyyy-MM-dd')}`;
       } else if (dateRange !== 'all') {
         const today = new Date();
         let startDate: Date;
-        
+
         switch (dateRange) {
           case 'today':
             startDate = today;
@@ -58,25 +57,21 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
           default:
             startDate = today;
         }
-        
+
         url += `?startDate=${format(startDate, 'yyyy-MM-dd')}&endDate=${format(today, 'yyyy-MM-dd')}`;
       }
 
       const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
+        headers: { 'Authorization': `Bearer ${accessToken}` },
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setAnalytics(data);
+        setAnalytics(await response.json());
       } else {
-        const error = await response.json();
-        toast.error(`Failed to fetch analytics: ${error.error}`);
+        const err = await response.json();
+        toast.error(`Failed to fetch analytics: ${err.error}`);
       }
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
+    } catch (e) {
       toast.error('An error occurred while fetching analytics');
     } finally {
       setLoading(false);
@@ -84,16 +79,12 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
   };
 
   const handleExportReport = () => {
-    if (!analytics) {
-      toast.error('No data to export');
-      return;
-    }
+    if (!analytics) return toast.error('No data to export');
 
-    // Create CSV content
     const csvContent = [
       ['MealPal Analytics Report'],
       ['Generated:', new Date().toLocaleString()],
-      ['Date Range:', dateRange === 'all' ? 'All Time' : dateRange === 'custom' ? `${format(customStartDate!, 'PP')} - ${format(customEndDate!, 'PP')}` : dateRange],
+      ['Date Range:', dateRange],
       [],
       ['Metric', 'Value'],
       ['Total Users', analytics.totalUsers],
@@ -103,27 +94,26 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
       ['Total Transactions', analytics.totalTransactions],
       ['Total Revenue (KES)', analytics.totalRevenue.toFixed(2)],
       ['Average Transaction (KES)', analytics.averageTransactionValue.toFixed(2)],
-      ['Revenue per User (KES)', analytics.totalUsers > 0 ? (analytics.totalRevenue / analytics.totalUsers).toFixed(2) : '0.00'],
+      [
+        'Revenue per User (KES)',
+        analytics.totalUsers > 0 ? (analytics.totalRevenue / analytics.totalUsers).toFixed(2) : '0.00'
+      ],
     ].map(row => row.join(',')).join('\n');
 
-    // Create and download file
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `mealpal-analytics-${format(new Date(), 'yyyy-MM-dd')}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
+
+    link.href = URL.createObjectURL(blob);
+    link.download = `mealpal-analytics-${format(new Date(), 'yyyy-MM-dd')}.csv`;
     link.click();
-    document.body.removeChild(link);
-    
+
     toast.success('Report exported successfully!');
   };
 
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -139,34 +129,25 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-6">
+      {/* --- Header --- */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="mb-1 text-lg sm:text-xl">System Analytics</h2>
+          <h2 className="text-xl">System Analytics</h2>
           <p className="text-gray-600 text-sm">Overview of platform metrics</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button
-            onClick={fetchAnalytics}
-            variant="outline"
-            className="gap-2"
-            size="sm"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
+
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={fetchAnalytics} className="gap-2">
+            <RefreshCw className="w-4 h-4" /> Refresh
           </Button>
-          <Button
-            onClick={handleExportReport}
-            className="bg-orange-500 hover:bg-orange-600 gap-2"
-            size="sm"
-          >
-            <Download className="w-4 h-4" />
-            Export Report
+          <Button size="sm" className="bg-orange-500 hover:bg-orange-600 gap-2" onClick={handleExportReport}>
+            <Download className="w-4 h-4" /> Export Report
           </Button>
         </div>
       </div>
 
-      {/* Date Range Filter */}
+      {/* --- Date Range --- */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Date Range</CardTitle>
@@ -175,7 +156,7 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
           <div className="flex flex-col sm:flex-row gap-3">
             <Select value={dateRange} onValueChange={setDateRange}>
               <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue />
+                <SelectValue placeholder="Select range" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Time</SelectItem>
@@ -190,6 +171,7 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
 
             {dateRange === 'custom' && (
               <div className="flex flex-col sm:flex-row gap-2">
+                {/* Start Date */}
                 <Popover open={showStartCalendar} onOpenChange={setShowStartCalendar}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="gap-2 justify-start text-sm">
@@ -201,15 +183,12 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
                     <Calendar
                       mode="single"
                       selected={customStartDate}
-                      onSelect={(date) => {
-                        setCustomStartDate(date);
-                        setShowStartCalendar(false);
-                      }}
-                      disabled={(date) => date > new Date()}
+                      onSelect={date => { setCustomStartDate(date); setShowStartCalendar(false); }}
                     />
                   </PopoverContent>
                 </Popover>
 
+                {/* End Date */}
                 <Popover open={showEndCalendar} onOpenChange={setShowEndCalendar}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="gap-2 justify-start text-sm">
@@ -221,11 +200,8 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
                     <Calendar
                       mode="single"
                       selected={customEndDate}
-                      onSelect={(date) => {
-                        setCustomEndDate(date);
-                        setShowEndCalendar(false);
-                      }}
-                      disabled={(date) => date > new Date() || (customStartDate && date < customStartDate)}
+                      onSelect={date => { setCustomEndDate(date); setShowEndCalendar(false); }}
+                      disabled={d => customStartDate ? d < customStartDate : false}
                     />
                   </PopoverContent>
                 </Popover>
@@ -235,7 +211,9 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
         </CardContent>
       </Card>
 
-      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+      {/* --- Summary Cards --- */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        {/* Users */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm">Total Users</CardTitle>
@@ -247,6 +225,7 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
           </CardContent>
         </Card>
 
+        {/* Revenue */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm">Total Revenue</CardTitle>
@@ -258,6 +237,7 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
           </CardContent>
         </Card>
 
+        {/* Transactions */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm">Total Transactions</CardTitle>
@@ -269,25 +249,30 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
           </CardContent>
         </Card>
 
+        {/* Avg Transaction */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm">Avg Transaction</CardTitle>
             <TrendingUp className="w-4 h-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-orange-600">KES {analytics.averageTransactionValue.toFixed(2)}</div>
+            <div className="text-orange-600">
+              KES {analytics.averageTransactionValue.toFixed(2)}
+            </div>
             <p className="text-xs text-gray-500 mt-1">Per purchase</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2">
+      {/* --- User Distribution --- */}
+      <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>User Distribution</CardTitle>
             <CardDescription>Breakdown of users by role</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-blue-500"></div>
@@ -311,96 +296,108 @@ export function ReportsTab({ accessToken }: ReportsTabProps) {
               </div>
               <span className="text-red-600">{analytics.totalSystemAdmins}</span>
             </div>
+
           </CardContent>
         </Card>
 
+        {/* --- Platform Health --- */}
         <Card>
           <CardHeader>
             <CardTitle>Platform Health</CardTitle>
             <CardDescription>Key performance indicators</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+
+            {/* User Engagement */}
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">User Engagement</span>
                 <span>
-                  {analytics.totalUsers > 0 
-                    ? ((analytics.totalTransactions / analytics.totalUsers) * 100).toFixed(1) 
+                  {analytics.totalUsers > 0
+                    ? ((analytics.totalTransactions / analytics.totalUsers) * 100).toFixed(1)
                     : 0}%
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-orange-500 h-2 rounded-full" 
-                  style={{ 
-                    width: `${Math.min(analytics.totalUsers > 0 ? (analytics.totalTransactions / analytics.totalUsers) * 100 : 0, 100)}%` 
+
+              <div className="w-full bg-gray-200 h-2 rounded-full">
+                <div
+                  className="bg-orange-500 h-2 rounded-full"
+                  style={{
+                    width: `${Math.min(
+                      analytics.totalUsers > 0
+                        ? (analytics.totalTransactions / analytics.totalUsers) * 100
+                        : 0,
+                      100
+                    )}%`,
                   }}
                 ></div>
               </div>
             </div>
 
+            {/* Student Adoption */}
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Student Adoption</span>
                 <span>
-                  {analytics.totalUsers > 0 
-                    ? ((analytics.totalStudents / analytics.totalUsers) * 100).toFixed(1) 
+                  {analytics.totalUsers > 0
+                    ? ((analytics.totalStudents / analytics.totalUsers) * 100).toFixed(1)
                     : 0}%
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-blue-500 h-2 rounded-full" 
-                  style={{ 
-                    width: `${analytics.totalUsers > 0 ? (analytics.totalStudents / analytics.totalUsers) * 100 : 0}%` 
+
+              <div className="w-full bg-gray-200 h-2 rounded-full">
+                <div
+                  className="bg-blue-500 h-2 rounded-full"
+                  style={{
+                    width: `${analytics.totalUsers > 0
+                      ? (analytics.totalStudents / analytics.totalUsers) * 100
+                      : 0}%`,
                   }}
                 ></div>
               </div>
             </div>
 
+            {/* Revenue per User */}
             <div className="pt-4 border-t">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Revenue per User</span>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Revenue per User</span>
                 <span className="text-orange-600">
-                  KES {analytics.totalUsers > 0 ? (analytics.totalRevenue / analytics.totalUsers).toFixed(2) : '0.00'}
+                  KES {analytics.totalUsers > 0
+                    ? (analytics.totalRevenue / analytics.totalUsers).toFixed(2)
+                    : '0.00'}
                 </span>
               </div>
             </div>
+
           </CardContent>
         </Card>
       </div>
 
+      {/* --- FIXED SYSTEM SUMMARY (the missing part) --- */}
       <Card>
         <CardHeader>
           <CardTitle>System Summary</CardTitle>
           <CardDescription>Detailed platform statistics</CardDescription>
         </CardHeader>
+
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
+
             <div className="space-y-1">
               <p className="text-sm text-gray-600">Active Students</p>
               <p className="text-orange-600">{analytics.totalStudents}</p>
             </div>
+
             <div className="space-y-1">
               <p className="text-sm text-gray-600">Cafeteria Staff</p>
               <p className="text-orange-600">{analytics.totalCafeteriaAdmins}</p>
             </div>
+
             <div className="space-y-1">
               <p className="text-sm text-gray-600">System Administrators</p>
               <p className="text-orange-600">{analytics.totalSystemAdmins}</p>
             </div>
-            <div className="space-y-1">
-              <p className="text-sm text-gray-600">Total Purchases</p>
-              <p className="text-orange-600">{analytics.totalTransactions}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm text-gray-600">Platform Revenue</p>
-              <p className="text-orange-600">KES {analytics.totalRevenue.toFixed(2)}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm text-gray-600">Average Spending</p>
-              <p className="text-orange-600">KES {analytics.averageTransactionValue.toFixed(2)}</p>
-            </div>
+
           </div>
         </CardContent>
       </Card>

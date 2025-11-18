@@ -213,15 +213,19 @@ export function CafeteriaAnalyticsTab({ accessToken }: CafeteriaAnalyticsTabProp
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={customEndDate}
-                      onSelect={(date) => {
+                   <Calendar
+                        mode="single"
+                        selected={customEndDate}
+                        onSelect={(date) => {
                         setCustomEndDate(date);
                         setShowEndCalendar(false);
-                      }}
-                      disabled={(date) => date > new Date() || (customStartDate && date < customStartDate)}
+                     }}
+                       disabled={[
+                              { after: new Date() },
+                             ...(customStartDate ? [{ before: customStartDate }] : [])
+                                 ]}
                     />
+
                   </PopoverContent>
                 </Popover>
               </div>
