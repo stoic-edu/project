@@ -132,7 +132,7 @@ export function MenuTab({ accessToken, onPurchase, budget }: MenuTabProps) {
 
     // Sort by health score and get top 3
     return scoredItems
-      .sort((a, b) => b.healthScore - a.healthScore)
+      .sort((a: any, b: any) => b.healthScore - a.healthScore)
       .slice(0, 3);
   }, [menu, budget, todaySpending]);
 

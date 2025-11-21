@@ -6,7 +6,6 @@ import { MealBudgetTab } from './MealBudgetTab';
 import { AnalyticsTab } from './AnalyticsTab';
 import { ProfileTab } from './ProfileTab';
 import { DietPreferenceDialog } from './DietPreferenceDialog';
-import { projectId } from '../../utils/supabase/info';
 
 interface StudentDashboardProps {
   user: any;
@@ -21,6 +20,23 @@ export function StudentDashboard({ user, profile, accessToken, onSignOut }: Stud
   const [userProfile, setUserProfile] = useState(profile);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Actually USE the user prop
+  useEffect(() => {
+    if (user) {
+      console.log('Student user loaded:', user.email || user.username);
+      // You can add user-specific logic here
+    }
+  }, [user]);
+
+  // Actually USE refreshTrigger
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      console.log('Refreshing dashboard data...');
+      // Add your data refresh logic here
+      // For example, you might want to refetch profile data
+    }
+  }, [refreshTrigger]);
+
   useEffect(() => {
     // Check if user has set diet preference
     if (!profile.dietPreference) {
@@ -31,14 +47,19 @@ export function StudentDashboard({ user, profile, accessToken, onSignOut }: Stud
   const handleDietPreferenceComplete = (dietPreference: string) => {
     setShowDietDialog(false);
     setUserProfile({ ...userProfile, dietPreference });
+    // Trigger refresh after setting diet preference
+    setRefreshTrigger(prev => prev + 1);
   };
 
   const handleProfileUpdate = (updatedProfile: any) => {
     setUserProfile(updatedProfile);
+    // Trigger refresh after profile update
+    setRefreshTrigger(prev => prev + 1);
   };
 
   const handlePurchase = () => {
     // Trigger a refresh when a purchase is made
+    console.log('Purchase completed, refreshing data...');
     setRefreshTrigger(prev => prev + 1);
   };
 
@@ -180,15 +201,27 @@ export function StudentDashboard({ user, profile, accessToken, onSignOut }: Stud
                 accessToken={accessToken}
                 onPurchase={handlePurchase}
                 profile={userProfile}
+                key={refreshTrigger} // Add key to force re-render on refresh
               />
             )}
-            {activeTab === 'budget' && <MealBudgetTab accessToken={accessToken} />}
-            {activeTab === 'analytics' && <AnalyticsTab accessToken={accessToken} />}
+            {activeTab === 'budget' && (
+              <MealBudgetTab 
+                accessToken={accessToken} 
+                key={refreshTrigger} // Add key to force re-render on refresh
+              />
+            )}
+            {activeTab === 'analytics' && (
+              <AnalyticsTab 
+                accessToken={accessToken} 
+                key={refreshTrigger} // Add key to force re-render on refresh
+              />
+            )}
             {activeTab === 'profile' && (
               <ProfileTab
                 profile={userProfile}
                 accessToken={accessToken}
                 onProfileUpdate={handleProfileUpdate}
+                key={refreshTrigger} // Add key to force re-render on refresh
               />
             )}
           </div>
