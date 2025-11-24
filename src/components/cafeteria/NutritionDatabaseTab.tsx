@@ -39,7 +39,7 @@ export function NutritionDatabaseTab({ accessToken }: NutritionDatabaseTabProps)
         `https://${projectId}.supabase.co/functions/v1/make-server-493cc528/nutrition`,
         {
           headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
+            'Authorization': `Bearer ${accessToken}`,
           },
         }
       );

@@ -14,6 +14,7 @@ interface SystemAdminDashboardProps {
 }
 
 export function SystemAdminDashboard({ user, profile, accessToken, onSignOut }: SystemAdminDashboardProps) {
+
   const [activeTab, setActiveTab] = useState('users');
 
   const navItems = [
@@ -24,6 +25,30 @@ export function SystemAdminDashboard({ user, profile, accessToken, onSignOut }: 
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Tab Navigation (Mobile & Desktop) */}
+      <nav className="flex bg-white border-b shadow-sm z-10">
+        <div className="max-w-7xl mx-auto flex gap-2 px-2 w-full justify-between">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex flex-1 flex-col items-center md:flex-row md:items-center gap-1 md:gap-2 px-2 md:px-4 py-3 border-b-2 transition-colors text-xs md:text-sm font-medium ${
+                  isActive
+                    ? 'border-orange-600 text-orange-600 bg-orange-50'
+                    : 'border-transparent text-gray-600 hover:text-orange-500 hover:bg-orange-50'
+                }`}
+                style={{ outline: 'none' }}
+              >
+                <Icon className="w-5 h-5" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
       {/* Mobile Header */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="px-4 py-3">
@@ -83,29 +108,7 @@ export function SystemAdminDashboard({ user, profile, accessToken, onSignOut }: 
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg md:hidden z-20">
-        <div className="grid grid-cols-3">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`flex flex-col items-center gap-1 py-3 px-2 transition-colors ${
-                  isActive 
-                    ? 'text-orange-600 bg-orange-50' 
-                    : 'text-gray-600 hover:text-orange-500'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-xs">{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+      {/* Removed Mobile Bottom Navigation for unified experience */}
     </div>
   );
 }
