@@ -2,18 +2,9 @@
 // This file contains comprehensive nutritional data for common cafeteria items
 
 export const nutritionData = [
-  // Breakfast Items
+  // Breakfast Items (with diet keywords)
   {
-    name: "Scrambled Eggs (2 eggs)",
-    calories: 180,
-    protein: 13,
-    carbs: 2,
-    fats: 14,
-    fiber: 0,
-    sodium: 350
-  },
-  {
-    name: "Oatmeal with Milk",
+    name: "Vegan Oatmeal Bowl",
     calories: 220,
     protein: 8,
     carbs: 35,
@@ -22,179 +13,107 @@ export const nutritionData = [
     sodium: 150
   },
   {
-    name: "Whole Wheat Toast (2 slices)",
+    name: "Vegetarian Omelette",
+    calories: 180,
+    protein: 13,
+    carbs: 2,
+    fats: 14,
+    fiber: 0,
+    sodium: 350
+  },
+  {
+    name: "Keto Avocado Toast",
     calories: 160,
     protein: 8,
-    carbs: 28,
-    fats: 2,
+    carbs: 8,
+    fats: 12,
     fiber: 4,
     sodium: 280
   },
   {
-    name: "Pancakes (3 medium)",
-    calories: 350,
-    protein: 10,
-    carbs: 58,
-    fats: 10,
-    fiber: 2,
-    sodium: 680
-  },
-  {
-    name: "French Toast (2 slices)",
-    calories: 300,
-    protein: 12,
-    carbs: 42,
-    fats: 10,
-    fiber: 2,
-    sodium: 450
-  },
-  {
-    name: "Yogurt Parfait with Granola",
-    calories: 280,
-    protein: 12,
-    carbs: 45,
-    fats: 6,
+    name: "High-Protein Greek Yogurt Parfait",
+    calories: 250,
+    protein: 20,
+    carbs: 22,
+    fats: 7,
     fiber: 3,
     sodium: 120
   },
-  {
-    name: "Breakfast Burrito",
-    calories: 420,
-    protein: 22,
-    carbs: 45,
-    fats: 18,
-    fiber: 5,
-    sodium: 920
-  },
 
-  // Main Course - Protein-Rich
+  // Main Course - Protein-Rich (with diet keywords)
   {
-    name: "Grilled Chicken Breast",
-    calories: 285,
-    protein: 53,
-    carbs: 0,
+    name: "Vegan Lentil Curry",
+    calories: 180,
+    protein: 16,
+    carbs: 75,
     fats: 6,
-    fiber: 0,
-    sodium: 150
-  },
-  {
-    name: "Beef Stew with Vegetables",
-    calories: 320,
-    protein: 28,
-    carbs: 18,
-    fats: 15,
-    fiber: 4,
-    sodium: 680
-  },
-  {
-    name: "Chicken Biryani",
-    calories: 380,
-    protein: 25,
-    carbs: 48,
-    fats: 10,
-    fiber: 3,
-    sodium: 780
-  },
-  {
-    name: "Fish Fillet (Tilapia)",
-    calories: 220,
-    protein: 40,
-    carbs: 0,
-    fats: 5,
-    fiber: 0,
-    sodium: 95
-  },
-  {
-    name: "Lamb Curry",
-    calories: 420,
-    protein: 30,
-    carbs: 12,
-    fats: 28,
-    fiber: 3,
-    sodium: 720
-  },
-  {
-    name: "Pork Chops (2 pieces)",
-    calories: 350,
-    protein: 38,
-    carbs: 0,
-    fats: 22,
-    fiber: 0,
-    sodium: 130
-  },
-
-  // Main Course - Vegetarian
-  {
-    name: "Lentil Dhal",
-    calories: 260,
-    protein: 18,
-    carbs: 38,
-    fats: 4,
-    fiber: 16,
+    fiber: 12,
     sodium: 420
   },
   {
-    name: "Chickpea Curry",
-    calories: 280,
-    protein: 14,
-    carbs: 42,
-    fats: 8,
-    fiber: 12,
-    sodium: 580
-  },
-  {
-    name: "Vegetable Stir Fry",
-    calories: 180,
-    protein: 6,
-    carbs: 24,
-    fats: 8,
-    fiber: 8,
-    sodium: 520
-  },
-  {
-    name: "Bean and Cheese Burrito",
-    calories: 450,
-    protein: 18,
-    carbs: 58,
-    fats: 16,
-    fiber: 12,
-    sodium: 920
-  },
-  {
-    name: "Vegetable Pasta Primavera",
-    calories: 340,
-    protein: 12,
-    carbs: 56,
-    fats: 8,
+    name: "Vegetarian Pasta Primavera",
+    calories: 190,
+    protein: 13,
+    carbs: 80,
+    fats: 12,
     fiber: 6,
     sodium: 480
   },
   {
-    name: "Mushroom Risotto",
-    calories: 380,
-    protein: 10,
-    carbs: 58,
-    fats: 12,
-    fiber: 3,
+    name: "Keto Grilled Chicken Salad",
+    calories: 200,
+    protein: 30,
+    carbs: 8,
+    fats: 18,
+    fiber: 5,
+    sodium: 150
+  },
+  {
+    name: "High-Protein Beef Stir Fry",
+    calories: 210,
+    protein: 32,
+    carbs: 20,
+    fats: 18,
+    fiber: 4,
+    sodium: 680
+  },
+
+  // Supper Items (with diet keywords)
+  {
+    name: "Vegan Bean Chili",
+    calories: 130,
+    protein: 14,
+    carbs: 60,
+    fats: 5,
+    fiber: 10,
+    sodium: 320
+  },
+  {
+    name: "Vegetarian Vegetable Soup",
+    calories: 120,
+    protein: 6,
+    carbs: 30,
+    fats: 3,
+    fiber: 5,
     sodium: 620
   },
   {
-    name: "Falafel Wrap",
-    calories: 420,
-    protein: 16,
-    carbs: 52,
-    fats: 18,
-    fiber: 10,
-    sodium: 780
+    name: "Keto Salmon Fillet",
+    calories: 160,
+    protein: 28,
+    carbs: 4,
+    fats: 30,
+    fiber: 3,
+    sodium: 95
   },
   {
-    name: "Vegetable Lasagna",
-    calories: 380,
-    protein: 18,
-    carbs: 42,
-    fats: 16,
-    fiber: 6,
-    sodium: 820
+    name: "High-Protein Tofu Stir Fry",
+    calories: 140,
+    protein: 22,
+    carbs: 18,
+    fats: 12,
+    fiber: 4,
+    sodium: 180
   },
 
   // Side Dishes - Carbs

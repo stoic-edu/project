@@ -361,11 +361,9 @@ export function MenuManagementTab({ accessToken }: MenuManagementTabProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Main Course">Main Course</SelectItem>
-                    <SelectItem value="Side Dish">Side Dish</SelectItem>
-                    <SelectItem value="Beverage">Beverage</SelectItem>
-                    <SelectItem value="Dessert">Dessert</SelectItem>
                     <SelectItem value="Breakfast">Breakfast</SelectItem>
+                    <SelectItem value="Lunch">Lunch</SelectItem>
+                    <SelectItem value="Supper">Supper</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

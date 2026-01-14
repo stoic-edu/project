@@ -75,23 +75,23 @@ app.post("/make-server-493cc528/auth/reset-all", async (c)=>{
     for (const user of users){
       try {
         await supabase.auth.admin.deleteUser(user.id);
-        await kv.del(user:${user.id});
-        await kv.del(budget:${user.id});
+        await kv.del(`user:${user.id}`);
+        await kv.del(`budget:${user.id}`);
         // Delete user transactions
-        const transactions = await kv.getByPrefix(transaction:${user.id}:);
+        const transactions = await kv.getByPrefix(`transaction:${user.id}:`);
         for (const transaction of transactions){
-          await kv.del(transaction:${user.id}:${transaction.id});
+          await kv.del(`transaction:${user.id}:${transaction.id}`);
         }
       } catch (error) {
-        console.log(Error deleting user ${user.id}: ${error});
+        console.log(`Error deleting user ${user.id}: ${error}`);
       }
     }
     return c.json({
       success: true,
-      message: Reset ${users.length} users
+      message: `Reset ${users.length} users`
     });
   } catch (error) {
-    console.log(Reset error: ${error});
+    console.log(`Reset error: ${error}`);
     return c.json({
       error: "Internal server error during reset"
     }, 500);
@@ -113,7 +113,7 @@ app.post("/make-server-493cc528/auth/delete-users", async (c)=>{
         // List all users from Supabase Auth to find by email
         const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
         if (listError) {
-          console.log(Error listing users: ${listError.message});
+          console.log(`Error listing users: ${listError.message}`);
           results.push({
             email,
             success: false,
@@ -133,12 +133,12 @@ app.post("/make-server-493cc528/auth/delete-users", async (c)=>{
         // Delete from Supabase Auth
         await supabase.auth.admin.deleteUser(userToDelete.id);
         // Delete from KV store
-        await kv.del(user:${userToDelete.id});
-        await kv.del(budget:${userToDelete.id});
+        await kv.del(`user:${userToDelete.id}`);
+        await kv.del(`budget:${userToDelete.id}`);
         // Delete user transactions
-        const transactions = await kv.getByPrefix(transaction:${userToDelete.id}:);
+        const transactions = await kv.getByPrefix(`transaction:${userToDelete.id}:`);
         for (const transaction of transactions){
-          await kv.del(transaction:${userToDelete.id}:${transaction.id});
+          await kv.del(`transaction:${userToDelete.id}:${transaction.id}`);
         }
         results.push({
           email,
@@ -146,7 +146,7 @@ app.post("/make-server-493cc528/auth/delete-users", async (c)=>{
           message: "User deleted successfully"
         });
       } catch (error) {
-        console.log(Error deleting user ${email}: ${error});
+        console.log(`Error deleting user ${email}: ${error}`);
         results.push({
           email,
           success: false,
@@ -159,7 +159,7 @@ app.post("/make-server-493cc528/auth/delete-users", async (c)=>{
       results
     });
   } catch (error) {
-    console.log(Delete users error: ${error});
+    console.log(`Delete users error: ${error}`);
     return c.json({
       error: "Internal server error during user deletion"
     }, 500);
@@ -197,7 +197,7 @@ app.post("/make-server-493cc528/auth/signup", async (c)=>{
       email_confirm: true // Automatically confirm since email server isn't configured
     });
     if (error) {
-      console.log(Signup error: ${error.message});
+      console.log(`Signup error: ${error.message}`);
       return c.json({
         error: error.message
       }, 400);
@@ -210,10 +210,10 @@ app.post("/make-server-493cc528/auth/signup", async (c)=>{
       role,
       createdAt: new Date().toISOString()
     };
-    await kv.set(user:${data.user.id}, userProfile);
+    await kv.set(`user:${data.user.id}`, userProfile);
     // Initialize student budget if role is STUDENT
     if (role === 'STUDENT') {
-      await kv.set(budget:${data.user.id}, {
+      await kv.set(`budget:${data.user.id}`, {
         userId: data.user.id,
         dailyBudget: 500,
         weeklyBudget: 3500,
@@ -225,7 +225,7 @@ app.post("/make-server-493cc528/auth/signup", async (c)=>{
       user: userProfile
     });
   } catch (error) {
-    console.log(Signup error: ${error});
+    console.log(`Signup error: ${error}`);
     return c.json({
       error: "Internal server error during signup"
     }, 500);
@@ -240,7 +240,7 @@ app.get("/make-server-493cc528/auth/me", async (c)=>{
         error: "Unauthorized"
       }, 401);
     }
-    const profile = await kv.get(user:${user.id});
+    const profile = await kv.get(`user:${user.id}`);
     if (!profile) {
       return c.json({
         error: "Profile not found"
@@ -248,7 +248,7 @@ app.get("/make-server-493cc528/auth/me", async (c)=>{
     }
     return c.json(profile);
   } catch (error) {
-    console.log(Get profile error: ${error});
+    console.log(`Get profile error: ${error}`);
     return c.json({
       error: "Internal server error getting profile"
     }, 500);
@@ -259,7 +259,7 @@ app.get("/make-server-493cc528/auth/me", async (c)=>{
 app.get("/make-server-493cc528/menu/:date", async (c)=>{
   try {
     const date = c.req.param('date');
-    const menu = await kv.get(menu:${date});
+    const menu = await kv.get(`menu:${date}`);
     if (!menu) {
       return c.json({
         items: []
@@ -267,7 +267,7 @@ app.get("/make-server-493cc528/menu/:date", async (c)=>{
     }
     return c.json(menu);
   } catch (error) {
-    console.log(Get menu error: ${error});
+    console.log(`Get menu error: ${error}`);
     return c.json({
       error: "Internal server error getting menu"
     }, 500);
@@ -282,7 +282,7 @@ app.post("/make-server-493cc528/menu", async (c)=>{
         error: "Unauthorized"
       }, 401);
     }
-    const profile = await kv.get(user:${user.id});
+    const profile = await kv.get(`user:${user.id}`);
     if (!profile || !isAdminRole(profile.role)) {
       return c.json({
         error: "Forbidden - Cafeteria Admin access required"
@@ -300,13 +300,13 @@ app.post("/make-server-493cc528/menu", async (c)=>{
       updatedAt: new Date().toISOString(),
       updatedBy: user.id
     };
-    await kv.set(menu:${date}, menu);
+    await kv.set(`menu:${date}`, menu);
     return c.json({
       success: true,
       menu
     });
   } catch (error) {
-    console.log(Create/update menu error: ${error});
+    console.log(`Create/update menu error: ${error}`);
     return c.json({
       error: "Internal server error creating menu"
     }, 500);
@@ -321,7 +321,7 @@ app.delete("/make-server-493cc528/menu/:date/:itemId", async (c)=>{
         error: "Unauthorized"
       }, 401);
     }
-    const profile = await kv.get(user:${user.id});
+    const profile = await kv.get(`user:${user.id}`);
     if (!profile || !isAdminRole(profile.role)) {
       return c.json({
         error: "Forbidden - Cafeteria Admin access required"
@@ -329,7 +329,7 @@ app.delete("/make-server-493cc528/menu/:date/:itemId", async (c)=>{
     }
     const date = c.req.param('date');
     const itemId = c.req.param('itemId');
-    const menu = await kv.get(menu:${date});
+    const menu = await kv.get(`menu:${date}`);
     if (!menu) {
       return c.json({
         error: "Menu not found"
@@ -337,13 +337,13 @@ app.delete("/make-server-493cc528/menu/:date/:itemId", async (c)=>{
     }
     menu.items = menu.items.filter((item)=>item.id !== itemId);
     menu.updatedAt = new Date().toISOString();
-    await kv.set(menu:${date}, menu);
+    await kv.set(`menu:${date}`, menu);
     return c.json({
       success: true,
       menu
     });
   } catch (error) {
-    console.log(Delete menu item error: ${error});
+    console.log(`Delete menu item error: ${error}`);
     return c.json({
       error: "Internal server error deleting menu item"
     }, 500);
@@ -356,7 +356,7 @@ app.get("/make-server-493cc528/nutrition", async (c)=>{
     const nutritionData = await kv.getByPrefix('nutrition:');
     return c.json(nutritionData);
   } catch (error) {
-    console.log(Get nutrition error: ${error});
+    console.log(`Get nutrition error: ${error}`);
     return c.json({
       error: "Internal server error getting nutrition data"
     }, 500);
@@ -383,15 +383,15 @@ app.post("/make-server-493cc528/nutrition/seed", async (c)=>{
         createdAt: new Date().toISOString(),
         seeded: true
       };
-      await kv.set(nutrition:${id}, nutrition);
+      await kv.set(`nutrition:${id}`, nutrition);
       seededCount++;
     }
     return c.json({
       success: true,
-      message: Seeded ${seededCount} nutrition entries
+      message: `Seeded ${seededCount} nutrition entries`
     });
   } catch (error) {
-    console.log(Seed nutrition error: ${error});
+    console.log(`Seed nutrition error: ${error}`);
     return c.json({
       error: "Internal server error seeding nutrition data"
     }, 500);
@@ -406,7 +406,7 @@ app.post("/make-server-493cc528/nutrition", async (c)=>{
         error: "Unauthorized"
       }, 401);
     }
-    const profile = await kv.get(user:${user.id});
+    const profile = await kv.get(`user:${user.id}`);
     if (!profile || !isAdminRole(profile.role)) {
       return c.json({
         error: "Forbidden - Cafeteria Admin access required"
@@ -420,13 +420,13 @@ app.post("/make-server-493cc528/nutrition", async (c)=>{
       createdAt: new Date().toISOString(),
       createdBy: user.id
     };
-    await kv.set(nutrition:${id}, nutrition);
+    await kv.set(`nutrition:${id}`, nutrition);
     return c.json({
       success: true,
       nutrition
     });
   } catch (error) {
-    console.log(Create nutrition error: ${error});
+    console.log(`Create nutrition error: ${error}`);
     return c.json({
       error: "Internal server error creating nutrition data"
     }, 500);
@@ -441,7 +441,7 @@ app.put("/make-server-493cc528/nutrition/:id", async (c)=>{
         error: "Unauthorized"
       }, 401);
     }
-    const profile = await kv.get(user:${user.id});
+    const profile = await kv.get(`user:${user.id}`);
     if (!profile || !isAdminRole(profile.role)) {
       return c.json({
         error: "Forbidden - Cafeteria Admin access required"
@@ -449,7 +449,7 @@ app.put("/make-server-493cc528/nutrition/:id", async (c)=>{
     }
     const id = c.req.param('id');
     const updates = await c.req.json();
-    const existing = await kv.get(nutrition:${id});
+    const existing = await kv.get(`nutrition:${id}`);
     if (!existing) {
       return c.json({
         error: "Nutrition data not found"
@@ -461,13 +461,13 @@ app.put("/make-server-493cc528/nutrition/:id", async (c)=>{
       id,
       updatedAt: new Date().toISOString()
     };
-    await kv.set(nutrition:${id}, nutrition);
+    await kv.set(`nutrition:${id}`, nutrition);
     return c.json({
       success: true,
       nutrition
     });
   } catch (error) {
-    console.log(Update nutrition error: ${error});
+    console.log(`Update nutrition error: ${error}`);
     return c.json({
       error: "Internal server error updating nutrition data"
     }, 500);
@@ -482,19 +482,19 @@ app.delete("/make-server-493cc528/nutrition/:id", async (c)=>{
         error: "Unauthorized"
       }, 401);
     }
-    const profile = await kv.get(user:${user.id});
+    const profile = await kv.get(`user:${user.id}`);
     if (!profile || !isAdminRole(profile.role)) {
       return c.json({
         error: "Forbidden - Cafeteria Admin access required"
       }, 403);
     }
     const id = c.req.param('id');
-    await kv.del(nutrition:${id});
+    await kv.del(`nutrition:${id}`);
     return c.json({
       success: true
     });
   } catch (error) {
-    console.log(Delete nutrition error: ${error});
+    console.log(`Delete nutrition error: ${error}`);
     return c.json({
       error: "Internal server error deleting nutrition data"
     }, 500);
@@ -510,7 +510,7 @@ app.get("/make-server-493cc528/budget", async (c)=>{
         error: "Unauthorized"
       }, 401);
     }
-    const budget = await kv.get(budget:${user.id});
+    const budget = await kv.get(`budget:${user.id}`);
     if (!budget) {
       // Create default budget
       const defaultBudget = {
@@ -519,12 +519,12 @@ app.get("/make-server-493cc528/budget", async (c)=>{
         weeklyBudget: 3500,
         currentSpending: 0
       };
-      await kv.set(budget:${user.id}, defaultBudget);
+      await kv.set(`budget:${user.id}`, defaultBudget);
       return c.json(defaultBudget);
     }
     return c.json(budget);
   } catch (error) {
-    console.log(Get budget error: ${error});
+    console.log(`Get budget error: ${error}`);
     return c.json({
       error: "Internal server error getting budget"
     }, 500);
@@ -540,7 +540,7 @@ app.put("/make-server-493cc528/budget", async (c)=>{
       }, 401);
     }
     const { dailyBudget, weeklyBudget } = await c.req.json();
-    const existing = await kv.get(budget:${user.id}) || {
+    const existing = await kv.get(`budget:${user.id}`) || {
       currentSpending: 0
     };
     const budget = {
@@ -550,13 +550,13 @@ app.put("/make-server-493cc528/budget", async (c)=>{
       weeklyBudget,
       updatedAt: new Date().toISOString()
     };
-    await kv.set(budget:${user.id}, budget);
+    await kv.set(`budget:${user.id}`, budget);
     return c.json({
       success: true,
       budget
     });
   } catch (error) {
-    console.log(Update budget error: ${error});
+    console.log(`Update budget error: ${error}`);
     return c.json({
       error: "Internal server error updating budget"
     }, 500);
@@ -572,10 +572,10 @@ app.get("/make-server-493cc528/transactions", async (c)=>{
         error: "Unauthorized"
       }, 401);
     }
-    const transactions = await kv.getByPrefix(transaction:${user.id}:);
+    const transactions = await kv.getByPrefix(`transaction:${user.id}:`);
     return c.json(transactions.sort((a, b)=>new Date(b.date).getTime() - new Date(a.date).getTime()));
   } catch (error) {
-    console.log(Get transactions error: ${error});
+    console.log(`Get transactions error: ${error}`);
     return c.json({
       error: "Internal server error getting transactions"
     }, 500);
@@ -601,19 +601,19 @@ app.post("/make-server-493cc528/transactions", async (c)=>{
       nutritionInfo,
       date: new Date().toISOString()
     };
-    await kv.set(transaction:${user.id}:${id}, transaction);
+    await kv.set(`transaction:${user.id}:${id}`, transaction);
     // Update current spending in budget
-    const budget = await kv.get(budget:${user.id});
+    const budget = await kv.get(`budget:${user.id}`);
     if (budget) {
       budget.currentSpending = (budget.currentSpending || 0) + amount;
-      await kv.set(budget:${user.id}, budget);
+      await kv.set(`budget:${user.id}`, budget);
     }
     return c.json({
       success: true,
       transaction
     });
   } catch (error) {
-    console.log(Add transaction error: ${error});
+    console.log(`Add transaction error: ${error}`);
     return c.json({
       error: "Internal server error adding transaction"
     }, 500);
@@ -629,7 +629,7 @@ app.get("/make-server-493cc528/admin/users", async (c)=>{
         error: "Unauthorized"
       }, 401);
     }
-    const profile = await kv.get(user:${user.id});
+    const profile = await kv.get(`user:${user.id}`);
     if (!profile || !isAdminRole(profile.role)) {
       return c.json({
         error: "Forbidden - System Admin access required"
@@ -638,7 +638,7 @@ app.get("/make-server-493cc528/admin/users", async (c)=>{
     const users = await kv.getByPrefix('user:');
     return c.json(users);
   } catch (error) {
-    console.log(Get all users error: ${error});
+    console.log(`Get all users error: ${error}`);
     return c.json({
       error: "Internal server error getting users"
     }, 500);
@@ -653,7 +653,7 @@ app.post("/make-server-493cc528/admin/users", async (c)=>{
         error: "Unauthorized"
       }, 401);
     }
-    const profile = await kv.get(user:${user.id});
+    const profile = await kv.get(`user:${user.id}`);
     if (!profile || !isAdminRole(profile.role)) {
       return c.json({
         error: "Forbidden - System Admin access required"
@@ -687,7 +687,7 @@ app.post("/make-server-493cc528/admin/users", async (c)=>{
       email_confirm: true // Automatically confirm since email server isn't configured
     });
     if (error) {
-      console.log(Create user error: ${error.message});
+      console.log(`Create user error: ${error.message}`);
       return c.json({
         error: error.message
       }, 400);
@@ -701,10 +701,10 @@ app.post("/make-server-493cc528/admin/users", async (c)=>{
       createdAt: new Date().toISOString(),
       createdBy: user.id
     };
-    await kv.set(user:${data.user.id}, userProfile);
+    await kv.set(`user:${data.user.id}`, userProfile);
     // Initialize student budget if role is STUDENT
     if (role === 'STUDENT') {
-      await kv.set(budget:${data.user.id}, {
+      await kv.set(`budget:${data.user.id}`, {
         userId: data.user.id,
         dailyBudget: 500,
         weeklyBudget: 3500,
@@ -716,7 +716,7 @@ app.post("/make-server-493cc528/admin/users", async (c)=>{
       user: userProfile
     });
   } catch (error) {
-    console.log(Create user error: ${error});
+    console.log(`Create user error: ${error}`);
     return c.json({
       error: "Internal server error creating user"
     }, 500);
@@ -731,7 +731,7 @@ app.put("/make-server-493cc528/admin/users/:userId", async (c)=>{
         error: "Unauthorized"
       }, 401);
     }
-    const profile = await kv.get(user:${user.id});
+    const profile = await kv.get(`user:${user.id}`);
     if (!profile || !isAdminRole(profile.role)) {
       return c.json({
         error: "Forbidden - System Admin access required"
@@ -749,7 +749,7 @@ app.put("/make-server-493cc528/admin/users/:userId", async (c)=>{
         error: "Invalid role"
       }, 400);
     }
-    const userProfile = await kv.get(user:${userId});
+    const userProfile = await kv.get(`user:${userId}`);
     if (!userProfile) {
       return c.json({
         error: "User not found"
@@ -757,13 +757,13 @@ app.put("/make-server-493cc528/admin/users/:userId", async (c)=>{
     }
     userProfile.role = role;
     userProfile.updatedAt = new Date().toISOString();
-    await kv.set(user:${userId}, userProfile);
+    await kv.set(`user:${userId}`, userProfile);
     return c.json({
       success: true,
       user: userProfile
     });
   } catch (error) {
-    console.log(Update user role error: ${error});
+    console.log(`Update user role error: ${error}`);
     return c.json({
       error: "Internal server error updating user"
     }, 500);
@@ -778,7 +778,7 @@ app.delete("/make-server-493cc528/admin/users/:userId", async (c)=>{
         error: "Unauthorized"
       }, 401);
     }
-    const profile = await kv.get(user:${user.id});
+    const profile = await kv.get(`user:${user.id}`);
     if (!profile || !isAdminRole(profile.role)) {
       return c.json({
         error: "Forbidden - System Admin access required"
@@ -786,7 +786,7 @@ app.delete("/make-server-493cc528/admin/users/:userId", async (c)=>{
     }
     const userId = c.req.param('userId');
     // Check if user exists
-    const userProfile = await kv.get(user:${userId});
+    const userProfile = await kv.get(`user:${userId}`);
     if (!userProfile) {
       return c.json({
         error: "User not found"
@@ -802,25 +802,25 @@ app.delete("/make-server-493cc528/admin/users/:userId", async (c)=>{
     // Delete from Supabase Auth
     const { error } = await supabase.auth.admin.deleteUser(userId);
     if (error) {
-      console.log(Delete user from auth error: ${error.message});
+      console.log(`Delete user from auth error: ${error.message}`);
       return c.json({
         error: error.message
       }, 400);
     }
     // Delete from KV store
-    await kv.del(user:${userId});
-    await kv.del(budget:${userId});
+    await kv.del(`user:${userId}`);
+    await kv.del(`budget:${userId}`);
     // Delete user transactions
-    const transactions = await kv.getByPrefix(transaction:${userId}:);
+    const transactions = await kv.getByPrefix(`transaction:${userId}:`);
     for (const transaction of transactions){
-      await kv.del(transaction:${userId}:${transaction.id});
+      await kv.del(`transaction:${userId}:${transaction.id}`);
     }
     return c.json({
       success: true,
       message: "User deleted successfully"
     });
   } catch (error) {
-    console.log(Delete user error: ${error});
+    console.log(`Delete user error: ${error}`);
     return c.json({
       error: "Internal server error deleting user"
     }, 500);
@@ -836,7 +836,7 @@ app.get("/make-server-493cc528/admin/analytics", async (c)=>{
       }, 401);
     }
     // Use KV store for role check
-    const profile = await kv.get(user:${user.id});
+    const profile = await kv.get(`user:${user.id}`);
     const role = profile?.role;
     console.log('[DEBUG] ANALYTICS ROLE FROM KV:', {
       userId: user.id,
@@ -857,7 +857,7 @@ app.get("/make-server-493cc528/admin/analytics", async (c)=>{
     if (!role || !allowedRoles.includes(role)) {
       console.log('[DEBUG] ANALYTICS ACCESS DENIED:', role);
       return c.json({
-        error: Forbidden - Analytics access allowed only for SYSTEM_ADMIN or CAFETERIA_ADMIN. Your role: ${role || 'none'}
+        error: `Forbidden - Analytics access allowed only for SYSTEM_ADMIN or CAFETERIA_ADMIN. Your role: ${role || 'none'}`
       }, 403);
     }
     // Get optional date range from query params
@@ -887,7 +887,7 @@ app.get("/make-server-493cc528/admin/analytics", async (c)=>{
     };
     return c.json(analytics);
   } catch (error) {
-    console.log(Get analytics error: ${error});
+    console.log(`Get analytics error: ${error}`);
     return c.json({
       error: "Internal server error getting analytics"
     }, 500);
@@ -909,7 +909,7 @@ app.put("/make-server-493cc528/profile", async (c)=>{
         error: "Name cannot be empty"
       }, 400);
     }
-    const profile = await kv.get(user:${user.id});
+    const profile = await kv.get(`user:${user.id}`);
     if (!profile) {
       return c.json({
         error: "Profile not found"
@@ -918,17 +918,17 @@ app.put("/make-server-493cc528/profile", async (c)=>{
     if (name) profile.name = name.trim();
     if (dietPreference !== undefined) profile.dietPreference = dietPreference;
     profile.updatedAt = new Date().toISOString();
-    await kv.set(user:${user.id}, profile);
-    return c.json({
-      success: true,
-      profile
-    });
-  } catch (error) {
-    console.log(Update profile error: ${error});
-    return c.json({
-      error: "Internal server error updating profile"
-    }, 500);
-  }
+    await kv.set(`user:${user.id}`, profile);
+      return c.json({
+        success: true,
+        profile
+      });
+    } catch (error) {
+      console.log(`Update profile error: ${error}`);
+      return c.json({
+        error: "Internal server error updating profile"
+      }, 500);
+    }
 });
 // ===== MEAL BUDGET ROUTES =====
 // Get meal budgets
@@ -940,7 +940,7 @@ app.get("/make-server-493cc528/meal-budgets", async (c)=>{
         error: "Unauthorized"
       }, 401);
     }
-    const mealBudgets = await kv.get(mealBudgets:${user.id});
+    const mealBudgets = await kv.get(`mealBudgets:${user.id}`);
     if (!mealBudgets) {
       // Create default meal budgets
       const defaultMealBudgets = {
@@ -950,12 +950,12 @@ app.get("/make-server-493cc528/meal-budgets", async (c)=>{
         supper: 150,
         createdAt: new Date().toISOString()
       };
-      await kv.set(mealBudgets:${user.id}, defaultMealBudgets);
+      await kv.set(`mealBudgets:${user.id}`, defaultMealBudgets);
       return c.json(defaultMealBudgets);
     }
     return c.json(mealBudgets);
   } catch (error) {
-    console.log(Get meal budgets error: ${error});
+    console.log(`Get meal budgets error: ${error}`);
     return c.json({
       error: "Internal server error getting meal budgets"
     }, 500);
@@ -978,13 +978,13 @@ app.put("/make-server-493cc528/meal-budgets", async (c)=>{
       supper: supper || 150,
       updatedAt: new Date().toISOString()
     };
-    await kv.set(mealBudgets:${user.id}, mealBudgets);
+    await kv.set(`mealBudgets:${user.id}`, mealBudgets);
     return c.json({
       success: true,
       mealBudgets
     });
   } catch (error) {
-    console.log(Update meal budgets error: ${error});
+    console.log(`Update meal budgets error: ${error}`);
     return c.json({
       error: "Internal server error updating meal budgets"
     }, 500);
@@ -996,94 +996,70 @@ app.post("/make-server-493cc528/recommendations", async (c)=>{
   try {
     const user = await verifyAuth(c.req.header('Authorization'));
     if (!user) {
-      return c.json({
-        error: "Unauthorized"
-      }, 401);
+      return c.json({ error: "Unauthorized" }, 401);
     }
-    const { date, mealType } = await c.req.json();
+    const { date } = await c.req.json();
     // Get user profile for diet preference
-    const profile = await kv.get(user:${user.id});
+    const profile = await kv.get(`user:${user.id}`);
     const dietPreference = profile?.dietPreference || 'normal';
     // Get meal budgets
-    const mealBudgets = await kv.get(mealBudgets:${user.id}) || {
+    const mealBudgets = await kv.get(`mealBudgets:${user.id}`) || {
       breakfast: 150,
       lunch: 200,
       supper: 150
     };
-    const budget = mealBudgets[mealType.toLowerCase()] || 200;
     // Get menu for the date
-    const menu = await kv.get(menu:${date});
+    const menu = await kv.get(`menu:${date}`);
     if (!menu || !menu.items) {
       return c.json({
-        recommendations: [],
+        recommendations: {
+          breakfast: [],
+          lunch: [],
+          supper: []
+        },
         message: "No menu available for this date"
       });
     }
-    // Filter menu items based on diet preference, budget, and meal category
-    let filteredItems = menu.items.filter((item)=>{
-      // Check if item is available
-      if (item.available === false) return false;
-      // Check if within budget
-      if (item.price > budget) return false;
-      // Check if matches meal category
-      const itemCategory = item.category?.toLowerCase() || '';
-      const targetMealType = mealType.toLowerCase();
-      // Map meal types to categories
-      if (targetMealType === 'breakfast' && itemCategory !== 'breakfast') return false;
-      if (targetMealType === 'lunch' && ![
-        'main course',
-        'side dish'
-      ].includes(itemCategory)) return false;
-      if (targetMealType === 'supper' && ![
-        'main course',
-        'side dish'
-      ].includes(itemCategory)) return false;
-      // Check diet preference
-      if (item.nutrition) {
-        const nutrition = item.nutrition;
-        if (dietPreference === 'vegan') {
-          // Vegan: typically high carbs, low protein, no animal products
-          // For simplicity, we'll check if protein is relatively low
-          if (nutrition.protein > 15) return false;
-        } else if (dietPreference === 'vegetarian') {
-          // Vegetarian: moderate protein, no meat
-          // Similar to vegan but allows dairy/eggs
-          if (nutrition.protein > 25) return false;
-        } else if (dietPreference === 'keto') {
-          // Keto: high fat, very low carbs, moderate protein
-          if (nutrition.carbs > 20) return false;
-        } else if (dietPreference === 'low-carb') {
-          // Low-carb: reduced carbs
-          if (nutrition.carbs > 30) return false;
-        } else if (dietPreference === 'high-protein') {
-          // High-protein: prioritize protein-rich foods
-          if (nutrition.protein < 20) return false;
+
+    // Helper to filter items for a meal type
+    function getRecommendationsForMeal(mealType) {
+      const budget = mealBudgets[mealType] || 200;
+      return menu.items.filter((item) => {
+        if (item.available === false) return false;
+        if (item.price > budget) return false;
+        const itemCategory = item.category?.toLowerCase() || '';
+        if (itemCategory !== mealType) return false;
+        if (dietPreference && item.name) {
+          const name = item.name.toLowerCase();
+          if (!name.includes(dietPreference.toLowerCase())) {
+            return false;
+          }
         }
-      }
-      return true;
-    });
-    // Sort recommendations by nutritional value and price
-    filteredItems.sort((a, b)=>{
-      // Prioritize items with nutrition data
-      if (a.nutrition && !b.nutrition) return -1;
-      if (!a.nutrition && b.nutrition) return 1;
-      // Then sort by price (ascending) to stay within budget
-      return a.price - b.price;
-    });
-    // Limit to top 5 recommendations
-    const recommendations = filteredItems.slice(0, 5);
+        return true;
+      })
+      .sort((a, b) => {
+        if (a.nutrition && !b.nutrition) return -1;
+        if (!a.nutrition && b.nutrition) return 1;
+        return a.price - b.price;
+      })
+      .slice(0, 5);
+    }
+
+    const recommendations = {
+      breakfast: getRecommendationsForMeal('breakfast'),
+      lunch: getRecommendationsForMeal('lunch'),
+      supper: getRecommendationsForMeal('supper')
+    };
+
     return c.json({
       recommendations,
-      budget,
+      mealBudgets,
       dietPreference,
-      mealType,
-      message: recommendations.length > 0 ? Found ${recommendations.length} recommendations : "No items match your preferences and budget"
+      message: "Recommendations generated for breakfast, lunch, and supper"
     });
   } catch (error) {
-    console.log(Get recommendations error: ${error});
-    return c.json({
-      error: "Internal server error getting recommendations"
-    }, 500);
+    console.log(`Get recommendations error: ${error}`);
+    return c.json({ error: "Internal server error getting recommendations" }, 500);
   }
 });
 // Get student analytics
@@ -1099,7 +1075,7 @@ app.get("/make-server-493cc528/student/analytics", async (c)=>{
     const url = new URL(c.req.url);
     const startDate = url.searchParams.get('startDate');
     const endDate = url.searchParams.get('endDate');
-    let transactions = await kv.getByPrefix(transaction:${user.id}:);
+    let transactions = await kv.getByPrefix(`transaction:${user.id}:`);
     // Filter transactions by date range if provided
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -1152,7 +1128,7 @@ app.get("/make-server-493cc528/student/analytics", async (c)=>{
     };
     return c.json(analytics);
   } catch (error) {
-    console.log(Get student analytics error: ${error});
+    console.log(`Get student analytics error: ${error}`);
     return c.json({
       error: "Internal server error getting analytics"
     }, 500);
